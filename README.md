@@ -165,7 +165,7 @@ style. Known limitations, stated openly:
 - Nap loss is modelled as a uniform width reduction, not pattern-piece packing.
 - Lining, foam, stuffing, minky/fleece and dye lots are out of scope.
 
-If you have real consumption data from a finished suit, [open an issue](https://github.com/cxl769807768/fursuit-yardage-engine/issues) — the
+If you have real consumption data from a finished suit, [open an issue](https://github.com/shawncalc/fursuit-yardage-engine/issues) — the
 constants should improve with data.
 
 ## Used by

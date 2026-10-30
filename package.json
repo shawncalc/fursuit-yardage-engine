@@ -7,10 +7,10 @@
   "homepage": "https://fursuitcalculator.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cxl769807768/fursuit-yardage-engine.git"
+    "url": "git+https://github.com/shawncalc/fursuit-yardage-engine.git"
   },
   "bugs": {
-    "url": "https://github.com/cxl769807768/fursuit-yardage-engine/issues"
+    "url": "https://github.com/shawncalc/fursuit-yardage-engine/issues"
   },
   "keywords": [
     "fursuit",
