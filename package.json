@@ -1,0 +1,58 @@
+{
+  "name": "fursuit-yardage-engine",
+  "version": "1.0.0",
+  "description": "Transparent fursuit fur yardage calculation engine. Pure TypeScript functions, zero dependencies, zero DOM. Powers fursuitcalculator.com.",
+  "license": "MIT",
+  "author": "Shawn Chen",
+  "homepage": "https://fursuitcalculator.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cxl769807768/fursuit-yardage-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cxl769807768/fursuit-yardage-engine/issues"
+  },
+  "keywords": [
+    "fursuit",
+    "fur",
+    "faux-fur",
+    "yardage",
+    "fabric",
+    "calculator",
+    "cosplay",
+    "sewing"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
+    }
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.browser.json",
+    "test": "npm run build && node --experimental-strip-types test/verify.ts",
+    "demo:build": "esbuild src/index.ts --bundle --format=iife --global-name=FursuitYardage --outfile=demo/engine.js"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}

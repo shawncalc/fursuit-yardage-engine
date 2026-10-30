@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fursuit-yardage-engine — minimal demo</title>
+<meta name="description" content="Minimal browser demo of the open-source fursuit fur yardage engine. Try the full calculator at fursuitcalculator.com.">
+<style>
+  :root {
+    --bg: #FDFAF5; --card: #FFFFFF; --ink: #3D3630; --ink-muted: #7A6C5C;
+    --line: #EFE3D2; --accent: #B4552D; --accent-dark: #8A3E1F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.55; padding: 32px 16px 48px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 28px; }
+  header h1 { font-size: 26px; letter-spacing: -0.5px; }
+  header p { color: var(--ink-muted); margin-top: 6px; font-size: 15px; }
+  .cta {
+    display: inline-block; margin-top: 14px; padding: 11px 22px; border-radius: 8px;
+    background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; font-size: 15px;
+  }
+  .cta:hover { background: var(--accent-dark); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+  .card h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-muted); margin-bottom: 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px; }
+  select, input[type="range"] { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; background: #fff; }
+  .check { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 14px; }
+  .big { font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  .big small { font-size: 16px; font-weight: 600; color: var(--ink-muted); }
+  .sub { color: var(--ink-muted); font-size: 14px; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13.5px; }
+  td, th { padding: 6px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+  td:last-child, th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  svg { width: 100%; height: auto; margin-top: 8px; }
+  footer { text-align: center; margin-top: 28px; color: var(--ink-muted); font-size: 13px; }
+  footer a { color: var(--accent); }
+  .warn { background: #FFF8E8; border: 1px solid #E8D9A8; border-radius: 6px; padding: 8px 10px; font-size: 12.5px; color: #6B5A1E; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>fursuit-yardage-engine</h1>
+    <p>Minimal demo of the open-source engine. The full calculator lives on the real site.</p>
+    <a class="cta" href="https://fursuitcalculator.com">→ Use the full calculator on fursuitcalculator.com</a>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Input</h2>
+      <label for="suitType">Suit type</label>
+      <select id="suitType"></select>
+      <label for="bodySize">Body size</label>
+      <select id="bodySize"></select>
+      <label for="furQuality">Fur quality</label>
+      <select id="furQuality"></select>
+      <label for="furWidth">Bolt width</label>
+      <select id="furWidth"></select>
+      <label for="buffer">Extra buffer: <span id="bufferLabel">15%</span></label>
+      <input type="range" id="buffer" min="0" max="100" step="5" value="15">
+      <label for="colors">Colours: <span id="colorsLabel">3</span></label>
+      <input type="range" id="colors" min="1" max="6" step="1" value="3">
+      <div class="check"><input type="checkbox" id="largeTail"><label for="largeTail" style="margin:0">Large tail (+50% tail)</label></div>
+      <div class="check"><input type="checkbox" id="complexMarkings"><label for="complexMarkings" style="margin:0">Complex markings (+8%)</label></div>
+    </div>
+
+    <div class="card">
+      <h2>Result</h2>
+      <div class="big"><span id="totalYards">–</span> <small>yd total</small></div>
+      <div class="sub">buy <strong id="yardsToBuy">–</strong> yd · <span id="perColor">–</span> yd avg per colour</div>
+      <table id="colorTable"></table>
+      <table id="partTable"></table>
+      <div id="warnings"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h2>Rough cut layout (simplified — not a nesting plan)</h2>
+    <div id="layout"></div>
+  </div>
+
+  <footer>
+    Engine: <a href="https://github.com/cxl769807768/fursuit-yardage-engine">fursuit-yardage-engine</a> (MIT) ·
+    Full version with guides: <a href="https://fursuitcalculator.com">fursuitcalculator.com</a>
+  </footer>
+</div>
+
+<script src="./engine.js"></script>
+<script>
+  const { calculateYardage, computeCutLayout, formatResultAsText, SUIT_TYPES, BODY_SIZES, FUR_QUALITIES, FUR_WIDTHS, DEFAULT_INPUT } = FursuitYardage;
+
+  const $ = (id) => document.getElementById(id);
+  const fill = (id, list, getLabel) => {
+    const el = $(id);
+    el.innerHTML = list.map((x) => `<option value="${x.id}">${getLabel(x)}</option>`).join('');
+  };
+  fill('suitType', SUIT_TYPES, (x) => x.label);
+  fill('bodySize', BODY_SIZES, (x) => `${x.label} (${x.heightHint})`);
+  fill('furQuality', FUR_QUALITIES, (x) => x.label);
+  fill('furWidth', FUR_WIDTHS, (x) => x.label);
+  $('suitType').value = DEFAULT_INPUT.suitType;
+  $('bodySize').value = DEFAULT_INPUT.bodySize;
+  $('furQuality').value = DEFAULT_INPUT.furQuality;
+  $('furWidth').value = DEFAULT_INPUT.furWidthId;
+
+  function readInput() {
+    return {
+      suitType: $('suitType').value,
+      bodySize: $('bodySize').value,
+      furQuality: $('furQuality').value,
+      furWidthId: $('furWidth').value,
+      bufferPercent: Number($('buffer').value),
+      colorCount: Number($('colors').value),
+      largeTail: $('largeTail').checked,
+      complexMarkings: $('complexMarkings').checked,
+    };
+  }
+
+  const FILLS = ['#F5EDE1', '#EFE3D2'];
+  const STROKE = '#D8C6AE';
+
+  function renderLayout(input, result) {
+    const layout = computeCutLayout(input, result);
+    if (!layout) { $('layout').innerHTML = '<p class="sub">Nothing to lay out.</p>'; return; }
+    const width = FUR_WIDTHS.find((w) => w.id === input.furWidthId);
+    const boltX = 88, boltW = 168, boltH = 380, padTop = 34, padBottom = 30;
+    const pxPerYard = boltH / result.totalYards;
+    const OUT = 34;
+    let cursor = padTop;
+    let rects = '';
+    layout.pieces.forEach((p, i) => {
+      const h = Math.max(p.yards * pxPerYard, 14);
+      const inside = h >= OUT;
+      rects += `<rect x="${boltX}" y="${cursor}" width="${boltW}" height="${h}" fill="${FILLS[i % 2]}" stroke="${STROKE}"/>`;
+      rects += inside
+        ? `<text x="${boltX + boltW / 2}" y="${cursor + h / 2 + 4}" text-anchor="middle" font-size="12" font-weight="600" fill="#4A423D">${p.label} · ${p.yards.toFixed(1)} yd</text>`
+        : `<text x="${boltX + boltW + 10}" y="${cursor + h / 2 + 4}" font-size="11" fill="#4A423D">${p.label} · ${p.yards.toFixed(1)} yd</text>`;
+      cursor += h;
+    });
+    const aY = cursor;
+    const aH = Math.max(layout.allowanceYards * pxPerYard, 14);
+    const totalH = aY + aH + padBottom;
+    rects += `<rect x="${boltX}" y="${aY}" width="${boltW}" height="${aH}" fill="#FFF8E8" stroke="#C9A75C" stroke-dasharray="5 3"/>`;
+    rects += aH >= OUT
+      ? `<text x="${boltX + boltW / 2}" y="${aY + aH / 2 + 4}" text-anchor="middle" font-size="11.5" font-weight="600" fill="#8A5A0E">Allowances · ${layout.allowanceYards.toFixed(1)} yd</text>`
+      : `<text x="${boltX + boltW + 10}" y="${aY + aH / 2 + 4}" font-size="11" fill="#8A5A0E">Allowances · ${layout.allowanceYards.toFixed(1)} yd</text>`;
+    rects += `<text x="${boltX}" y="${totalH - 8}" font-size="12" font-weight="700" fill="#3D3630">= ${result.totalYards.toFixed(1)} yd to buy</text>`;
+    rects += `<text x="${boltX + boltW / 2}" y="${padTop - 10}" text-anchor="middle" font-size="10.5" fill="#7A6C5C">usable width ≈ ${layout.usableWidthYd.toFixed(2)} yd</text>`;
+    $('layout').innerHTML =
+      `<svg viewBox="0 0 410 ${totalH}" role="img" style="max-width:420px;margin:0 auto;display:block">
+        <rect x="${boltX}" y="${padTop}" width="${boltW}" height="${boltH}" fill="#FDFAF5" stroke="${STROKE}" stroke-width="1.5" rx="4"/>
+        ${rects}
+      </svg>
+      <p class="sub" style="text-align:center;margin-top:6px">Simplified diagram — real pattern pieces nest differently.</p>`;
+  }
+
+  function render() {
+    const input = readInput();
+    const result = calculateYardage(input);
+    $('bufferLabel').textContent = input.bufferPercent + '%';
+    $('colorsLabel').textContent = input.colorCount;
+    $('totalYards').textContent = result.totalYards.toFixed(2);
+    $('yardsToBuy').textContent = result.yardsToBuy;
+    $('perColor').textContent = result.yardsPerColor.toFixed(2);
+    $('colorTable').innerHTML =
+      '<tr><th>Colour</th><th>Buy</th></tr>' +
+      result.colors.map((c) => `<tr><td>${c.label}</td><td>${c.yards.toFixed(2)} yd</td></tr>`).join('');
+    $('partTable').innerHTML =
+      '<tr><th>Region</th><th>Incl. allowances</th></tr>' +
+      result.parts.filter((p) => p.covered).map((p) => `<tr><td>${p.label}</td><td>${p.adjustedYards.toFixed(2)} yd</td></tr>`).join('');
+    $('warnings').innerHTML = result.warnings.map((w) => `<div class="warn">${w}</div>`).join('');
+    renderLayout(input, result);
+    window.__lastText = formatResultAsText(input, result);
+  }
+
+  ['suitType', 'bodySize', 'furQuality', 'furWidth', 'buffer', 'colors', 'largeTail', 'complexMarkings']
+    .forEach((id) => { $(id).addEventListener('input', render); $(id).addEventListener('change', render); });
+  render();
+</script>
+</body>
+</html>
